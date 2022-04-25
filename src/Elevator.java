@@ -2,19 +2,21 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 public class Elevator {
+    private final int elevatorId;
     private int currentFloor = 0;
     private Direction currentDirection = Direction.NONE;
     private final Queue<Integer> tasks = new LinkedList<>();
     private final ElevatorThread thread;
 
-    public Elevator() {
+    public Elevator(int elevatorId) {
+        this.elevatorId = elevatorId;
         this.thread = new ElevatorThread();
         this.thread.start();
     }
 
     public void addTask(int floor, int destFloor, Direction direction) {
-        // Don't add if at this floor already
         synchronized (tasks) {
+            // Don't add if at this floor already
             if (floor != currentFloor) tasks.add(floor);
             tasks.add(destFloor);
         }
@@ -23,6 +25,12 @@ public class Elevator {
     public boolean isImmediatelyAvailable() {
         synchronized (tasks) {
             return tasks.size() == 0;
+        }
+    }
+
+    public int amountOfTasks() {
+        synchronized (tasks) {
+            return tasks.size();
         }
     }
 
@@ -35,7 +43,7 @@ public class Elevator {
 
         public void run() {
             while (!Thread.interrupted()) {
-                System.out.println("Current floor: " + currentFloor + ", Direction: " + currentDirection);
+                System.out.printf("[%d] Current Floor: %d, Direction: %s\n", elevatorId, currentFloor, currentDirection);
 
                 // If there is something to do
                 synchronized (tasks) {
