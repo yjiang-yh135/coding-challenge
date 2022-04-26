@@ -1,15 +1,31 @@
 public class Main {
     public static void main(String[] args) {
-        ElevatorSystem es = new ElevatorSystem(2);
-        es.addTask(10, 5, Direction.DOWN);
-        es.addTask(5, 10, Direction.UP);
-        es.addTask(2, 5, Direction.UP);
+        ElevatorSystem es = new ElevatorSystem(7);
 
-//        try {
-//            Thread.sleep(5000);
-//            es.shutdown();
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
+        es.addRequest(35, 0, Direction.DOWN);
+        es.addRequest(14, 0, Direction.UP);
+        es.addRequest(0, 14, Direction.UP);
+
+        es.checkAvailableElevators();
+
+        es.addRequest(20, 0, Direction.DOWN);
+
+        try {
+            Thread.sleep(20000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        es.checkAvailableElevators();
+
+        es.addRequest(0, 15, Direction.UP);
+
+        es.checkAvailableElevators();
+
+        try {
+            es.shutdown();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }
