@@ -22,6 +22,13 @@ public class Main {
 
         es.addRequest(0, 15, Direction.UP);
 
+        try {
+            // Let the elevators run for a little while.
+            Thread.sleep(10000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         es.checkAvailableElevators();
 
         try {
