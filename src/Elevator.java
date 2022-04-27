@@ -1,5 +1,7 @@
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * An elevator.
@@ -10,6 +12,8 @@ public class Elevator {
     private Direction currentDirection = Direction.NONE;
     private final Queue<Integer> tasks = new LinkedList<>();
     private final ElevatorThread thread;
+    // Semaphore to track amount of tasks to prevent busy waiting.
+    private final Semaphore tasksSem = new Semaphore(0);
 
     /**
      * Creates a new elevator.
@@ -29,11 +33,12 @@ public class Elevator {
      */
     public void addRequest(int floor, int destFloor, Direction direction) {
         synchronized (tasks) {
-            // Only add the starting floor if the elevator is at the
             if (floor != currentFloor && direction != currentDirection) {
                 tasks.add(floor);
+                tasksSem.release();
             }
             tasks.add(destFloor);
+            tasksSem.release();
         }
     }
 
@@ -73,6 +78,15 @@ public class Elevator {
 
         public void run() {
             while (!Thread.interrupted()) {
+                // System.out.printf("[%d] Current Floor: %d, Direction: %s\n", elevatorId, currentFloor, currentDirection);
+
+                try {
+                    // Blocks if there are no tasks.
+                    tasksSem.acquire();
+                } catch (InterruptedException e) {
+                    break;
+                }
+
                 synchronized (tasks) {
                     if (tasks.size() > 0) {
                         int taskToHandle = tasks.peek();
@@ -86,8 +100,12 @@ public class Elevator {
                         }
 
                         if (taskToHandle == currentFloor) {
+                            // Task fulfilled, remove it.
                             tasks.remove();
                             currentDirection = Direction.NONE;
+                        } else {
+                            // Release the Semaphore again since the task hasn't been removed.
+                            tasksSem.release();
                         }
                     }
                 }
@@ -95,7 +113,6 @@ public class Elevator {
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
-                    // Thread got interrupted, stop execution
                     break;
                 }
             }

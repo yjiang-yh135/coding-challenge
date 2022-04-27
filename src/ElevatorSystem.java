@@ -33,14 +33,17 @@ public class ElevatorSystem {
             }
 
             // Also use this loop find out the elevator with the least amount of tasks, to avoid a second loop.
-            // Since the search for the minimum is not atomic (doesn't lock all the tasks queues in the elevators),
+            // Since the search for the minimum is not atomic (doesn't lock all the task queues in the elevators),
             // addTask() is not thread-safe (should be fine for this purpose though)
             if (e.amountOfTasks() < elevatorWithLeastRequests.amountOfTasks()) {
                 elevatorWithLeastRequests = e;
             }
         }
 
-        // No elevator immediately available, assign to the least busy elevator
+        // No elevator "immediately" available, assign to the least busy elevator.
+        // Again, since the search and request-submission is not atomic, the state of the elevators could have changed,
+        // but since the elevators update their state rather "infrequently", it should not cause any big problems.
+        // The alternative would be to lock all the task queues, which would be rather inefficient.
         elevatorWithLeastRequests.addRequest(floor, destFloor, direction);
     }
 
@@ -50,6 +53,7 @@ public class ElevatorSystem {
     public void checkAvailableElevators() {
         StringBuilder builder = new StringBuilder("Available Elevators: ");
         boolean first = true;
+
         for (int i = 0; i < elevators.length; i++) {
             if (elevators[i].isImmediatelyAvailable()) {
                 if (!first) {
