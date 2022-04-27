@@ -32,7 +32,7 @@ public class Elevator {
      */
     public void addRequest(int floor, int destFloor, Direction direction) {
         synchronized (tasks) {
-            if (floor != currentFloor && direction != currentDirection) {
+            if (floor != currentFloor || direction != currentDirection) {
                 tasks.add(floor);
                 tasksSem.release();
             }
@@ -87,25 +87,24 @@ public class Elevator {
                 }
 
                 synchronized (tasks) {
-                    if (tasks.size() > 0) {
-                        int taskToHandle = tasks.peek();
+                    // Tasks should always have an element at this point, no need to check the queue size.
+                    int taskToHandle = tasks.peek();
 
-                        if (taskToHandle < currentFloor) {
-                            currentFloor--;
-                            currentDirection = Direction.DOWN;
-                        } else {
-                            currentFloor++;
-                            currentDirection = Direction.UP;
-                        }
+                    if (taskToHandle < currentFloor) {
+                        currentFloor--;
+                        currentDirection = Direction.DOWN;
+                    } else {
+                        currentFloor++;
+                        currentDirection = Direction.UP;
+                    }
 
-                        if (taskToHandle == currentFloor) {
-                            // Task fulfilled, remove it.
-                            tasks.remove();
-                            currentDirection = Direction.NONE;
-                        } else {
-                            // Release the Semaphore again since the task hasn't been removed.
-                            tasksSem.release();
-                        }
+                    if (taskToHandle == currentFloor) {
+                        // Task fulfilled, remove it.
+                        tasks.remove();
+                        currentDirection = Direction.NONE;
+                    } else {
+                        // Release the Semaphore again since the task hasn't been removed.
+                        tasksSem.release();
                     }
                 }
 
